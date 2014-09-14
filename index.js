@@ -259,20 +259,15 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
       modeBin = '01';
       break;
     case 'boost':
-      modeBin = '10';
+      modeBin = '11';
       break;
     default:
       log('Unknown mode: ' + mode);
       return false;
   }
 
-  if (modeBin == '00') {
-    reqTempHex = (0).toString(16);
-  }
-  else {
-    reqTempBinary = modeBin + ("000000" + (temperature * 2).toString(2)).substr(-6);
-    reqTempHex = parseInt(reqTempBinary, 2).toString(16);
-  }
+  reqTempBinary = modeBin + ("000000" + (temperature * 2).toString(2)).substr(-6);
+  reqTempHex = parseInt(reqTempBinary, 2).toString(16);
 
   var payload = new Buffer('000440000000' + rfAdress + '01' + reqTempHex, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
