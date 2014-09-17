@@ -114,7 +114,7 @@ MaxCube.prototype.parseCommand = function (type, payload) {
       data = this.parseCommandSendDevice(payload);
       break;
     default:
-      log('Unknown command type: ' + type);
+      console.log('Unknown command type: ' + type);
       break;
   }
   return data;
@@ -262,7 +262,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
       modeBin = '11';
       break;
     default:
-      log('Unknown mode: ' + mode);
+      console.log('Unknown mode: ' + mode);
       return false;
   }
 
