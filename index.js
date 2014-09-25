@@ -58,9 +58,9 @@ MaxCube.prototype.onData = function (data) {
     if (line.length > 0) {
       var commandType = line.substr(0, 1);
       var payload = line.substring(2);
-      //console.log('Data received: ' + commandType);
+      console.log('Data received: ' + commandType);
       var dataObj = this.parseCommand(commandType, payload);
-      //console.log(dataObj);
+      console.log(dataObj);
     }
   }.bind(this));
   this.busy = false;
