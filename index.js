@@ -255,7 +255,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
     case 'auto':
       modeBin = '00';
       break;
-    case 'manual':
+    case 'manu':
       modeBin = '01';
       break;
     case 'boost':
