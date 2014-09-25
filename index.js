@@ -32,7 +32,7 @@ function MaxCube(ip, port, heartbeatInterval) {
 MaxCube.prototype.connect = function () {
   if (!this.isConnected) {
     this.client.connect(this.port, this.ip, function() {
-      console.log('Connected');
+      //console.log('Connected');
       this.isConnected = true;
       this.emit('connected');
     }.bind(this));
@@ -45,7 +45,7 @@ MaxCube.prototype.connect = function () {
 
 MaxCube.prototype.send = function (message) {
   if (!this.busy) {
-    console.log('Sending command: ' + message.substr(0,1));
+    //console.log('Sending command: ' + message.substr(0,1));
     this.busy = true;
     this.client.write(message);
   }
@@ -58,9 +58,9 @@ MaxCube.prototype.onData = function (data) {
     if (line.length > 0) {
       var commandType = line.substr(0, 1);
       var payload = line.substring(2);
-      console.log('Data received: ' + commandType);
+      //console.log('Data received: ' + commandType);
       var dataObj = this.parseCommand(commandType, payload);
-      console.log(dataObj);
+      //console.log(dataObj);
     }
   }.bind(this));
   this.busy = false;
@@ -243,7 +243,7 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
 MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
   var reqTempHex, reqTempBinary;
   if (!this.isConnected) {
-    console.log('Not connected');
+    //console.log('Not connected');
     return;
   }
 
