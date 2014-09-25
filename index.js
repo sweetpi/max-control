@@ -32,7 +32,7 @@ function MaxCube(ip, port, heartbeatInterval) {
 MaxCube.prototype.connect = function () {
   if (!this.isConnected) {
     this.client.connect(this.port, this.ip, function() {
-      // console.log('Connected');
+      console.log('Connected');
       this.isConnected = true;
       this.emit('connected');
     }.bind(this));
