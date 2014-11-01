@@ -43,11 +43,11 @@ MaxCube.prototype.connect = function () {
   setTimeout(this.connect.bind(this), this.interval);
 };
 
-MaxCube.prototype.send = function (message) {
+MaxCube.prototype.send = function (message, callback) {
   if (!this.busy) {
     //console.log('Sending command: ' + message.substr(0,1));
     this.busy = true;
-    this.client.write(message);
+    this.client.write(message, 'utf-8', callback);
   }
 };
 
@@ -232,18 +232,19 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
   var payloadArr = payload.split(",");
 
   var dataObj = {
-    accepted: payloadArr[1] == '1',
+    accepted: payloadArr[1] == '0',
     duty_cycle: parseInt(payloadArr[0], 16),
     free_memory_slots: parseInt(payloadArr[2], 16)
   };
 
+  this.emit('response', dataObj);
   return dataObj;
 };
 
-MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
+MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callback) {
   var reqTempHex, reqTempBinary;
   if (!this.isConnected) {
-    //console.log('Not connected');
+    callback(new Error("Not connected"));
     return;
   }
 
@@ -262,7 +263,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
       modeBin = '11';
       break;
     default:
-      console.log('Unknown mode: ' + mode);
+      callback(new Error('Unknown mode: ' + mode));
       return false;
   }
 
@@ -271,7 +272,23 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature) {
 
   var payload = new Buffer('000440000000' + rfAdress + '01' + reqTempHex, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
-  this.send(data);
+
+  this.send(data, function(err) {
+      if(err && callback) { 
+        callback(err); 
+        callback = null;
+      }
+  });
+
+  this.once('response', function(res) {
+    if(res.accepted) {
+      callback(null);
+    } else {
+      callback(new Error('Command was rejected'));
+    }
+    callback = null;
+  });
+
 };
 
 module.exports = MaxCube;
