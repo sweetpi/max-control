@@ -135,10 +135,12 @@ MaxCube.prototype.parseCommandHello = function (payload) {
     stateTime: payloadArr[9],
     ntpCounter: payloadArr[10],
   };
-
-  this.dutyCycle = dataObj.duty_cycle;
-  this.memorySlots = dataObj.free_memory_slots;
-
+  this.dutyCycle = dataObj.dutyCycle;
+  this.memorySlots = dataObj.freeMemorySlots;
+  this.emit('status', {
+    dutyCycle: this.dutyCycle,
+    memorySlots: this.memorySlots
+  });
   return dataObj;
 };
 
@@ -236,6 +238,12 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
     duty_cycle: parseInt(payloadArr[0], 16),
     free_memory_slots: parseInt(payloadArr[2], 16)
   };
+  this.dutyCycle = dataObj.duty_cycle;
+  this.memorySlots = dataObj.free_memory_slots;
+  this.emit('status', {
+    dutyCycle: this.dutyCycle,
+    memorySlots: this.memorySlots
+  });
   this.emit('response', dataObj);
   return dataObj;
 };
@@ -287,9 +295,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
       callback(null);
     } else {
       var reason = "";
-      if(dataObj.duty_cycle <= 4) {
-        reason = ": No duty cycles left, please wait a hour and try again.";
-      } else if(dataObj.free_memory_slots) {
+      if(dataObj.free_memory_slots === 0) {
         reason = ": Too many commands send, the cube has no memoery slots left.";
       }
       callback(new Error('Command was rejected' + reason));
