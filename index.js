@@ -236,7 +236,6 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
     duty_cycle: parseInt(payloadArr[0], 16),
     free_memory_slots: parseInt(payloadArr[2], 16)
   };
-
   this.emit('response', dataObj);
   return dataObj;
 };
@@ -287,7 +286,13 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     if(res.accepted) {
       callback(null);
     } else {
-      callback(new Error('Command was rejected'));
+      var reason = "";
+      if(dataObj.duty_cycle <= 4) {
+        reason = ": No duty cycles left, please wait a hour and try again.";
+      } else if(dataObj.free_memory_slots) {
+        reason = ": Too many commands send, the cube has no memoery slots left.";
+      }
+      callback(new Error('Command was rejected' + reason));
     }
     callback = null;
   });
