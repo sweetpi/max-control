@@ -281,6 +281,9 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
   });
 
   this.once('response', function(res) {
+    if(!callback) {
+      return;
+    }
     if(res.accepted) {
       callback(null);
     } else {
