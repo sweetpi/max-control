@@ -295,7 +295,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
       callback(null);
     } else {
       var reason = "";
-      if(dataObj.free_memory_slots === 0) {
+      if(res.free_memory_slots === 0) {
         reason = ": Too many commands send, the cube has no memoery slots left.";
       }
       callback(new Error('Command was rejected' + reason));
