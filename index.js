@@ -254,7 +254,7 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
 
 
 MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callback) {
-  var reqTempHex, reqTempBinary, reqToomHex;
+  var reqTempHex, reqTempBinary, reqRoomHex;
   if (!this.isConnected) {
     callback(new Error("Not connected"));
     return;
@@ -289,7 +289,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
   
   reqRoomHex = padLeft(roomId.toString(16), 2);
 
-  if(mode == 'auto' && typeof temperature === "undefined") {
+  if(mode == 'auto' && (typeof temperature === "undefined" || temperature === null)) {
     reqTempHex = '00';
   } else {
     reqTempBinary = modeBin + ("000000" + (temperature * 2).toString(2)).substr(-6);
@@ -297,7 +297,6 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
   }
 
 
-  console.log(reqTempHex);
   var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
 
