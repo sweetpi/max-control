@@ -23,6 +23,10 @@ function MaxCube(ip, port, heartbeatInterval) {
   this.devices = {};
   this.deviceCount = 0;
   this.client = new net.Socket();
+  var self = this;
+  this.client.on('error', function(err){
+    self.emit('error', err);
+  });
 
   this.client.on('data', this.onData.bind(this));
 
@@ -248,8 +252,9 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
   return dataObj;
 };
 
+
 MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callback) {
-  var reqTempHex, reqTempBinary;
+  var reqTempHex, reqTempBinary, reqToomHex;
   if (!this.isConnected) {
     callback(new Error("Not connected"));
     return;
@@ -274,10 +279,26 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
       return false;
   }
 
-  reqTempBinary = modeBin + ("000000" + (temperature * 2).toString(2)).substr(-6);
-  reqTempHex = parseInt(reqTempBinary, 2).toString(16);
+  var device = this.devices[rfAdress];
+  if(!device) {
+    callback(new Error("Could not find a device with this rfAdress!"));
+    return;
+  }
+  var roomId = device.roomId; 
 
-  var payload = new Buffer('000440000000' + rfAdress + '01' + reqTempHex, 'hex').toString('base64');
+  
+  reqRoomHex = padLeft(roomId.toString(16), 2);
+
+  if(mode == 'auto' && typeof temperature === "undefined") {
+    reqTempHex = '00';
+  } else {
+    reqTempBinary = modeBin + ("000000" + (temperature * 2).toString(2)).substr(-6);
+    reqTempHex = parseInt(reqTempBinary, 2).toString(16);    
+  }
+
+
+  console.log(reqTempHex);
+  var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
 
   this.send(data, function(err) {
