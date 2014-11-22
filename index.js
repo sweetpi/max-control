@@ -217,12 +217,21 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
       this.devices[address].setpoint = parseInt(decodedPayload[currentIndex + 7].toString(10)) / 2;
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
+      var mode;
       switch (data.substr(6, 2)) {
-        case '00': this.devices[address].mode = "auto"; break;
-        case '01': this.devices[address].mode = "manu"; break;
-        case '10': this.devices[address].mode = "vacation"; break;
-        case '11': this.devices[address].mode = "boost"; break;
+        case '00': mode = "auto"; break;
+        case '01': mode = "manu"; break;
+        case '10': mode = "vacation"; break;
+        case '11': mode = "boost"; break;
       }
+      if(typeof mode == "string") {
+        this.devices[address].mode = mode;
+      }
+      if(mode != "vacation" && mode != "boost") {
+        var actualTemp = (decodedPayload[currentIndex + 8] & 0xFF ) * 256  + ( decodedPayload[currentIndex + 9 ] & 0xFF ) / 10;
+        this.devices[address].actualTemperature = actualTemp;
+      }
+
     }
     else if (this.devices[address] && this.devices[address].type === 'Shutter Contact') {
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
