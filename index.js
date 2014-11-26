@@ -234,7 +234,7 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
       }
 
     } else if (this.devices[address] && this.devices[address].type === 'Wall mounted Thermostat') {
-      actualTemp = (decodedPayload[currentIndex + 11] & 0xFF) + (decodedPayload[currentIndex + 7] & 0x80) * 2 ;
+      actualTemp = ((decodedPayload[currentIndex + 11] & 0xFF) + (decodedPayload[currentIndex + 7] & 0x80) * 2) / 10;
       this.devices[address].actualTemperature = actualTemp;
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
     } else if (this.devices[address] && this.devices[address].type === 'Shutter Contact') {
