@@ -208,6 +208,7 @@ MaxCube.prototype.parseCommandMetadata = function (payload) {
 MaxCube.prototype.parseCommandDeviceList = function (payload) {
   var decodedPayload = new Buffer(payload, 'base64');
   var currentIndex = 1;
+  var actualTemp = 0;
   for(var i = 1; i <= this.deviceCount; i++) {
     var data = '';
     var length = parseInt(decodedPayload[currentIndex - 1].toString());
@@ -228,12 +229,15 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
         this.devices[address].mode = mode;
       }
       if(mode != "vacation" && mode != "boost") {
-        var actualTemp = (decodedPayload[currentIndex + 8] & 0xFF ) * 256  + ( decodedPayload[currentIndex + 9 ] & 0xFF ) / 10;
+        actualTemp = (decodedPayload[currentIndex + 8] & 0xFF ) * 256  + ( decodedPayload[currentIndex + 9 ] & 0xFF ) / 10;
         this.devices[address].actualTemperature = actualTemp;
       }
 
-    }
-    else if (this.devices[address] && this.devices[address].type === 'Shutter Contact') {
+    } else if (this.devices[address] && this.devices[address].type === 'Wall mounted Thermostat') {
+      actualTemp = (decodedPayload[currentIndex + 11] & 0xFF) + (decodedPayload[currentIndex + 7] & 0x80) * 2 ;
+      this.devices[address].actualTemperature = actualTemp;
+      this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
+    } else if (this.devices[address] && this.devices[address].type === 'Shutter Contact') {
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
       this.devices[address].state = parseInt(data.substr(6, 1)) ? 'open' : 'closed';
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
