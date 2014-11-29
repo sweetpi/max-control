@@ -234,9 +234,7 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
       } else {
         actualTemp = undefined;
       }
-
       this.devices[address].actualTemperature = actualTemp;
-      console.log(decodedPayload[currentIndex + 8], decodedPayload[currentIndex + 9 ], mode, actualTemp);
 
     } else if (this.devices[address] && this.devices[address].type === 'Wall mounted Thermostat') {
       actualTemp = (decodedPayload[currentIndex + 11] + (decodedPayload[currentIndex + 7] & 0x80) * 2) / 10;
