@@ -213,7 +213,7 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
     var data = '';
     var length = parseInt(decodedPayload[currentIndex - 1].toString());
     var address = decodedPayload.slice(currentIndex, currentIndex + 3).toString('hex');
-    if (this.devices[address] && (devicetype == 'Heating Thermostat' || devicetype == 'Heating Thermostat Plus') ) {
+    if (this.devices[address] && (this.devices[address].type == 'Heating Thermostat' || this.devices[address].type == 'Heating Thermostat Plus') ) {
       this.devices[address].valve = decodedPayload[currentIndex + 6];
       this.devices[address].setpoint = parseInt(decodedPayload[currentIndex + 7].toString(10)) / 2;
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
