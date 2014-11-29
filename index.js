@@ -229,7 +229,7 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
         this.devices[address].mode = mode;
       }
 
-      actualTemp = parseInt(decodedPayload[currentIndex + 8]) * 256  + parseInt(decodedPayload[currentIndex + 9]) / 10;
+      actualTemp = (parseInt(decodedPayload[currentIndex + 8]) * 256  + parseInt(decodedPayload[currentIndex + 9])) / 10;
       console.log(decodedPayload[currentIndex + 8], decodedPayload[currentIndex + 9 ], mode, actualTemp);
       if(mode != "vacation" && mode != "boost") {
         this.devices[address].actualTemperature = actualTemp;
