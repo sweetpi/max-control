@@ -154,7 +154,7 @@ MaxCube.prototype.parseCommandDeviceConfiguration = function (payload) {
 
   var address = decodedPayload.slice(1, 4).toString('hex');
   var devicetype = this.getDeviceType(parseInt(decodedPayload[4].toString(10)));
-  if (devicetype == 'Heating Thermostat' && this.devices[address]) {
+  if ( (devicetype == 'Heating Thermostat' || devicetype == 'Heating Thermostat Plus') && this.devices[address]) {
     this.devices[address].comfortTemperature = parseInt(decodedPayload[18].toString(10)) / 2;
     this.devices[address].ecoTemperature = parseInt(decodedPayload[19].toString(10)) / 2;
     this.devices[address].maxTemperature = parseInt(decodedPayload[20].toString(10)) / 2;
@@ -213,7 +213,7 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
     var data = '';
     var length = parseInt(decodedPayload[currentIndex - 1].toString());
     var address = decodedPayload.slice(currentIndex, currentIndex + 3).toString('hex');
-    if (this.devices[address] && this.devices[address].type === 'Heating Thermostat') {
+    if (this.devices[address] && (devicetype == 'Heating Thermostat' || devicetype == 'Heating Thermostat Plus') ) {
       this.devices[address].valve = decodedPayload[currentIndex + 6];
       this.devices[address].setpoint = parseInt(decodedPayload[currentIndex + 7].toString(10)) / 2;
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
@@ -228,8 +228,10 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
       if(typeof mode == "string") {
         this.devices[address].mode = mode;
       }
+
+      actualTemp = (decodedPayload[currentIndex + 8] & 0x01 ) * 256  + ( decodedPayload[currentIndex + 9 ] & 0xFF ) / 10;
+      console.log(decodedPayload[currentIndex + 8], decodedPayload[currentIndex + 9 ], mode);
       if(mode != "vacation" && mode != "boost") {
-        actualTemp = (decodedPayload[currentIndex + 8] & 0xFF ) * 256  + ( decodedPayload[currentIndex + 9 ] & 0xFF ) / 10;
         this.devices[address].actualTemperature = actualTemp;
       }
 
