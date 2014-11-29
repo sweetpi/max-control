@@ -229,14 +229,17 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
         this.devices[address].mode = mode;
       }
 
-      actualTemp = (parseInt(decodedPayload[currentIndex + 8]) * 256  + parseInt(decodedPayload[currentIndex + 9])) / 10;
-      console.log(decodedPayload[currentIndex + 8], decodedPayload[currentIndex + 9 ], mode, actualTemp);
-      if(mode != "vacation" && mode != "boost") {
-        this.devices[address].actualTemperature = actualTemp;
+      if(decodedPayload[currentIndex + 8] !== 0 || decodedPayload[currentIndex + 9] !== 0) {
+        actualTemp = (decodedPayload[currentIndex + 8] * 256 + decodedPayload[currentIndex + 9]) / 10;
+      } else {
+        actualTemp = undefined;
       }
 
+      this.devices[address].actualTemperature = actualTemp;
+      console.log(decodedPayload[currentIndex + 8], decodedPayload[currentIndex + 9 ], mode, actualTemp);
+
     } else if (this.devices[address] && this.devices[address].type === 'Wall mounted Thermostat') {
-      actualTemp = (parseInt(decodedPayload[currentIndex + 11]) + (parseInt(decodedPayload[currentIndex + 7]) & 0x80) * 2) / 10;
+      actualTemp = (decodedPayload[currentIndex + 11] + (decodedPayload[currentIndex + 7] & 0x80) * 2) / 10;
       this.devices[address].actualTemperature = actualTemp;
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
     } else if (this.devices[address] && this.devices[address].type === 'Shutter Contact') {
