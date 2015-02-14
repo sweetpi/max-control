@@ -216,6 +216,24 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
     if (this.devices[address] && (this.devices[address].type == 'Heating Thermostat' || this.devices[address].type == 'Heating Thermostat Plus') ) {
       this.devices[address].valve = decodedPayload[currentIndex + 6];
       this.devices[address].setpoint = parseInt(decodedPayload[currentIndex + 7].toString(10)) / 2;
+      /* byte 5 from http://www.domoticaforum.eu/viewtopic.php?f=66&t=6654
+5          1  12          bit 4     Valid              0=invalid;1=information provided is valid
+                          bit 3     Error              0=no; 1=Error occurred
+                          bit 2     Answer             0=an answer to a command,1=not an answer to a command
+                          bit 1     Status initialized 0=not initialized, 1=yes
+                               
+                          12  = 00010010b
+                              = Valid, Initialized
+*/
+      this.devices[address].initialized = !!(decodedPayload[currentIndex + 4] & (1 << 1));
+      this.devices[address].fromCmd = !!(decodedPayload[currentIndex + 4] & (1 << 2));
+      this.devices[address].error = !!(decodedPayload[currentIndex + 4] & (1 << 3));
+      this.devices[address].valid = !!(decodedPayload[currentIndex + 4] & (1 << 4));
+      this.devices[address].dstActive = !!(decodedPayload[currentIndex + 5] & 8);
+      this.devices[address].gateway_known = !!(decodedPayload[currentIndex + 5] & 16);
+      this.devices[address].panelLocked = !!(decodedPayload[currentIndex + 5] & 32);
+      this.devices[address].linkError = !!(decodedPayload[currentIndex + 5] & 64);
+
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
       var mode;
@@ -268,13 +286,15 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
   return dataObj;
 };
 
-
 MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callback) {
   var reqTempHex, reqTempBinary, reqRoomHex;
   if (!this.isConnected) {
     callback(new Error("Not connected"));
     return;
   }
+
+  var date_until = '0000';
+  var time_until = '00';
 
   // 00 = Auto weekprog (no temp is needed, just make the whole byte 00)
   // 01 = Permanent
@@ -312,8 +332,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     reqTempHex = parseInt(reqTempBinary, 2).toString(16);    
   }
 
-
-  var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex, 'hex').toString('base64');
+  var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex + date_until + time_until, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
 
   this.send(data, function(err) {
@@ -339,6 +358,12 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     callback = null;
   });
 
+};
+
+MaxCube.prototype.sendResetError = function (rfAdress, callback) {
+  var payload = new Buffer(rfAdress).toString('base64');
+  var data = 'r:01,' + payload + '\r\n';
+  this.send(data, callback);
 };
 
 module.exports = MaxCube;
