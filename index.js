@@ -382,7 +382,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
         reason = ": Too many commands send, the cube has no memoery slots left.";
         reasonCode = "NO_MEMORY";
       } else {
-        windowOpen = !self.allWindowsClosed(roomId);
+        var isWindowOpen = !self.allWindowsClosed(roomId);
         if(isWindowOpen) {
           reason = ": A window in the room is open";
           reasonCode = "WINDOW_OPEN";
