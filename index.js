@@ -13,7 +13,7 @@ function MaxCube(ip, port, heartbeatInterval) {
   this.ip = ip;
   this.port = port;
   this.interval = heartbeatInterval || 20000;
-  this.isConnected = false;
+  this.connectionState = 'disconnected';
   this.busy = false;
   this.callback = null;
   this.dutyCycle = 0;
@@ -25,6 +25,8 @@ function MaxCube(ip, port, heartbeatInterval) {
   this.client = new net.Socket();
   var self = this;
   this.client.on('error', function(err){
+    self.client.end();
+    self.connectionState = 'disconnected';
     self.emit('error', err);
   });
 
@@ -34,14 +36,18 @@ function MaxCube(ip, port, heartbeatInterval) {
 }
 
 MaxCube.prototype.connect = function () {
-  if (!this.isConnected) {
+  if (this.connectionState === 'disconnected') {
+    this.connectionState = "connecting";
     this.client.connect(this.port, this.ip, function() {
-      //console.log('Connected');
-      this.isConnected = true;
+      this.connectionState = 'connected';
       this.emit('connected');
     }.bind(this));
-  } else {
-    this.send('l:\r\n');
+  } else if(this.connectionState === 'connected'){
+    this.send('l:\r\n', function(err){
+      if(err) {
+        this.client.emit('error', err);
+      }
+    });
   }
 
   setTimeout(this.connect.bind(this), this.interval);
@@ -216,9 +222,26 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
     if (this.devices[address] && (this.devices[address].type == 'Heating Thermostat' || this.devices[address].type == 'Heating Thermostat Plus') ) {
       this.devices[address].valve = decodedPayload[currentIndex + 6];
       this.devices[address].setpoint = parseInt(decodedPayload[currentIndex + 7].toString(10)) / 2;
+      /* byte 5 from http://www.domoticaforum.eu/viewtopic.php?f=66&t=6654
+5          1  12          bit 4     Valid              0=invalid;1=information provided is valid
+                          bit 3     Error              0=no; 1=Error occurred
+                          bit 2     Answer             0=an answer to a command,1=not an answer to a command
+                          bit 1     Status initialized 0=not initialized, 1=yes
+                               
+                          12  = 00010010b
+                              = Valid, Initialized
+*/
+      this.devices[address].initialized = !!(decodedPayload[currentIndex + 4] & (1 << 1));
+      this.devices[address].fromCmd = !!(decodedPayload[currentIndex + 4] & (1 << 2));
+      this.devices[address].error = !!(decodedPayload[currentIndex + 4] & (1 << 3));
+      this.devices[address].valid = !!(decodedPayload[currentIndex + 4] & (1 << 4));
+      this.devices[address].dst_active = !!(decodedPayload[currentIndex + 5] & 8);
+      this.devices[address].gateway_known = !!(decodedPayload[currentIndex + 5] & 16);
+      this.devices[address].panel_locked = !!(decodedPayload[currentIndex + 5] & 32);
+      this.devices[address].link_error = !!(decodedPayload[currentIndex + 5] & 64);
+
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
-      var mode;
       switch (data.substr(6, 2)) {
         case '00': mode = "auto"; break;
         case '01': mode = "manu"; break;
@@ -268,13 +291,32 @@ MaxCube.prototype.parseCommandSendDevice = function (payload) {
   return dataObj;
 };
 
+MaxCube.prototype.allWindowsClosed = function(roomId) {
+  var self = this;
+  if(!self.devices) {
+    return;
+  }
+  // check if a window is open
+  var isWindowOpen = false;
+  Object.keys(self.devices).forEach(function(key) {
+    var otherDevice = self.devices[key];
+    if(otherDevice.type === 'Shutter Contact' && otherDevice.roomId === roomId && otherDevice.state !== 'closed') {
+      isWindowOpen = true;
+    }
+  });
+  return !isWindowOpen;
+};
 
 MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callback) {
   var reqTempHex, reqTempBinary, reqRoomHex;
-  if (!this.isConnected) {
+  var self = this;
+  if (this.connectionState !== 'connected') {
     callback(new Error("Not connected"));
     return;
   }
+
+  var date_until = '0000';
+  var time_until = '00';
 
   // 00 = Auto weekprog (no temp is needed, just make the whole byte 00)
   // 01 = Permanent
@@ -312,14 +354,18 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     reqTempHex = parseInt(reqTempBinary, 2).toString(16);    
   }
 
-
-  var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex, 'hex').toString('base64');
+  var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex + date_until + time_until, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
 
   this.send(data, function(err) {
-      if(err && callback) { 
-        callback(err); 
-        callback = null;
+      if(err) {
+        this.connectionState = 'disconnected';
+        if(callback) {
+          callback(err);
+          callback = null;
+        } else {
+          this.client.emit('error', err);
+        }
       }
   });
 
@@ -331,10 +377,20 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
       callback(null);
     } else {
       var reason = "";
+      var reasonCode = "Unknown";
       if(res.free_memory_slots === 0) {
         reason = ": Too many commands send, the cube has no memoery slots left.";
+        reasonCode = "NO_MEMORY";
+      } else {
+        windowOpen = !self.allWindowsClosed(roomId);
+        if(isWindowOpen) {
+          reason = ": A window in the room is open";
+          reasonCode = "WINDOW_OPEN";
+        }
       }
-      callback(new Error('Command was rejected' + reason));
+      var err = new Error('Command was rejected' + reason);
+      err.code = reasonCode;
+      callback(err);
     }
     callback = null;
   });
