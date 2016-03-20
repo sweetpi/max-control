@@ -235,10 +235,10 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
       this.devices[address].fromCmd = !!(decodedPayload[currentIndex + 4] & (1 << 2));
       this.devices[address].error = !!(decodedPayload[currentIndex + 4] & (1 << 3));
       this.devices[address].valid = !!(decodedPayload[currentIndex + 4] & (1 << 4));
-      this.devices[address].dst_active = !!(decodedPayload[currentIndex + 5] & 8);
-      this.devices[address].gateway_known = !!(decodedPayload[currentIndex + 5] & 16);
-      this.devices[address].panel_locked = !!(decodedPayload[currentIndex + 5] & 32);
-      this.devices[address].link_error = !!(decodedPayload[currentIndex + 5] & 64);
+      this.devices[address].dstActive = !!(decodedPayload[currentIndex + 5] & 8);
+      this.devices[address].gatewayKnown = !!(decodedPayload[currentIndex + 5] & 16);
+      this.devices[address].panelLocked = !!(decodedPayload[currentIndex + 5] & 32);
+      this.devices[address].linkError = !!(decodedPayload[currentIndex + 5] & 64);
 
       data = padLeft(decodedPayload[currentIndex + 5].toString(2), 8);
       this.devices[address].battery = parseInt(data.substr(0, 1)) ? 'low' : 'ok';
@@ -395,6 +395,12 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     callback = null;
   });
 
+};
+
+MaxCube.prototype.sendResetError = function (rfAdress, callback) {
+  var payload = new Buffer(rfAdress).toString('base64');
+  var data = 'r:01,' + payload + '\r\n';
+  this.send(data, callback);
 };
 
 module.exports = MaxCube;
