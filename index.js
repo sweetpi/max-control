@@ -58,10 +58,13 @@ MaxCube.prototype.send = function (message, callback) {
     //console.log('Sending command: ' + message.substr(0,1));
     this.busy = true;
     this.client.write(message, 'utf-8', callback);
+  } else {
+    callback(new Error("The cube is busy"));
   }
 };
 
 MaxCube.prototype.onData = function (data) {
+  this.busy = false;
   data = data.toString('utf-8');
   data = data.split('\r\n');
   data.forEach(function (line) {
@@ -73,7 +76,6 @@ MaxCube.prototype.onData = function (data) {
       //console.log(dataObj);
     }
   }.bind(this));
-  this.busy = false;
   this.emit('update', this.devices);
 };
 
@@ -366,6 +368,15 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
         } else {
           this.client.emit('error', err);
         }
+      } else {
+        var timeoutTime = 10000;
+        setTimeout(function(){
+          if(!callback) {
+            return;
+          }
+          callback(new Error("No awnser from cube after " + timeoutTime + "ms"));
+          callback = null;
+        }, timeoutTime)
       }
   });
 
