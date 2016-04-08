@@ -47,7 +47,7 @@ MaxCube.prototype.connect = function () {
       if(err) {
         this.client.emit('error', err);
       }
-    });
+    }.bind(this));
   }
 
   setTimeout(this.connect.bind(this), this.interval);
@@ -378,7 +378,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
           callback = null;
         }, timeoutTime)
       }
-  });
+  }.bind(this));
 
   this.once('response', function(res) {
     if(!callback) {
