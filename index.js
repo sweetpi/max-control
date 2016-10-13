@@ -353,7 +353,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     reqTempHex = '00';
   } else {
     reqTempBinary = modeBin + ("000000" + (temperature * 2).toString(2)).substr(-6);
-    reqTempHex = parseInt(reqTempBinary, 2).toString(16);    
+    reqTempHex = padLeft(parseInt(reqTempBinary, 2).toString(16), 2);
   }
 
   var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex + date_until + time_until, 'hex').toString('base64');
