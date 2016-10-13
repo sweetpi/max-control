@@ -1,6 +1,6 @@
 {
   "name": "max-control",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Control the ELV Max! heating system with node.js",
   "main": "index.js",
   "scripts": {
