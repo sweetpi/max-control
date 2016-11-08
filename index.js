@@ -217,7 +217,7 @@ MaxCube.prototype.parseCommandDeviceList = function (payload) {
   var decodedPayload = new Buffer(payload, 'base64');
   var currentIndex = 1;
   var actualTemp = 0;
-  for(var i = 1; i <= this.deviceCount; i++) {
+  for(var i = 0; i < this.deviceCount, currentIndex < decodedPayload.length; i++) {
     var data = '';
     var length = parseInt(decodedPayload[currentIndex - 1].toString());
     var address = decodedPayload.slice(currentIndex, currentIndex + 3).toString('hex');
