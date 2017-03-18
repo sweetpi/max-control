@@ -309,7 +309,7 @@ MaxCube.prototype.allWindowsClosed = function(roomId) {
   return !isWindowOpen;
 };
 
-MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callback) {
+MaxCube.prototype.setTemperature = function (rfAddress, mode, temperature, callback) {
   var reqTempHex, reqTempBinary, reqRoomHex;
   var self = this;
   if (this.connectionState !== 'connected') {
@@ -339,9 +339,9 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
       return false;
   }
 
-  var device = this.devices[rfAdress];
+  var device = this.devices[rfAddress];
   if(!device) {
-    callback(new Error("Could not find a device with this rfAdress!"));
+    callback(new Error("Could not find a device with this rfAddress!"));
     return;
   }
   var roomId = device.roomId; 
@@ -356,7 +356,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
     reqTempHex = padLeft(parseInt(reqTempBinary, 2).toString(16), 2);
   }
 
-  var payload = new Buffer('000440000000' + rfAdress + reqRoomHex + reqTempHex + date_until + time_until, 'hex').toString('base64');
+  var payload = new Buffer('000440000000' + rfAddress + reqRoomHex + reqTempHex + date_until + time_until, 'hex').toString('base64');
   var data = 's:' + payload + '\r\n';
 
   this.send(data, function(err) {
@@ -374,7 +374,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
           if(!callback) {
             return;
           }
-          callback(new Error("No awnser from cube after " + timeoutTime + "ms"));
+          callback(new Error("No answer from cube after " + timeoutTime + "ms"));
           callback = null;
         }, timeoutTime)
       }
@@ -390,7 +390,7 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
       var reason = "";
       var reasonCode = "Unknown";
       if(res.free_memory_slots === 0) {
-        reason = ": Too many commands send, the cube has no memoery slots left.";
+        reason = ": Too many commands send, the cube has no memory slots left.";
         reasonCode = "NO_MEMORY";
       } else {
         var isWindowOpen = !self.allWindowsClosed(roomId);
@@ -408,8 +408,8 @@ MaxCube.prototype.setTemperature = function (rfAdress, mode, temperature, callba
 
 };
 
-MaxCube.prototype.sendResetError = function (rfAdress, callback) {
-  var payload = new Buffer(rfAdress).toString('base64');
+MaxCube.prototype.sendResetError = function (rfAddress, callback) {
+  var payload = new Buffer(rfAddress).toString('base64');
   var data = 'r:01,' + payload + '\r\n';
   this.send(data, callback);
 };
