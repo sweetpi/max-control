@@ -27,6 +27,7 @@ function MaxCube(ip, port, heartbeatInterval) {
   this.client.on('error', function(err){
     self.client.end();
     self.connectionState = 'disconnected';
+    self.busy = false;
     self.emit('error', err);
   });
 
